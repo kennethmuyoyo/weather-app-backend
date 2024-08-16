@@ -20,13 +20,11 @@ class WeatherService
 
     public function getWeatherData(string $city, string $units = 'metric'): array
     {
-        Log::info('WeatherService::getWeatherData called', ['city' => $city, 'units' => $units]);
-        
         try {
             $coordinates = $this->getCoordinates($city);
             $weatherData = $this->getForecast($coordinates['lat'], $coordinates['lon'], $units);
             
-            $result = [
+            return [
                 'current' => $this->getCurrentWeather($weatherData),
                 'forecast' => $this->getThreeDayForecast($weatherData),
                 'location' => [
@@ -34,48 +32,55 @@ class WeatherService
                     'country' => $coordinates['country'],
                 ],
             ];
-
-            Log::info('WeatherService::getWeatherData result', ['result' => $result]);
-            return $result;
-        } catch (\Exception $e) {
-            Log::error('Exception in WeatherService::getWeatherData', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+        } catch (WeatherException $e) {
             throw $e;
+        } catch (\Exception $e) {
+            throw new WeatherException('An unexpected error occurred in getWeatherData', 500, $e, [
+                'city' => $city,
+                'units' => $units,
+                'exception' => get_class($e),
+            ]);
         }
     }
 
     protected function getCoordinates(string $city): array
     {
-        Log::info('Getting coordinates for city', ['city' => $city]);
-        return Cache::remember("coordinates_{$city}", 86400, function () use ($city) {
+        try {
             $response = Http::get("{$this->geoUrl}direct", [
                 'q' => $city,
                 'limit' => 1,
                 'appid' => $this->apiKey,
             ]);
 
-            Log::info('Geocoding API response', ['status' => $response->status(), 'body' => $response->body()]);
-
-            if ($response->failed() || empty($response->json())) {
-                Log::error('Failed to get coordinates', ['city' => $city, 'response' => $response->body()]);
-                throw new WeatherException('Failed to get coordinates for the city');
+            if ($response->failed()) {
+                throw new WeatherException('Geocoding API request failed', $response->status(), null, [
+                    'response' => $response->json(),
+                    'city' => $city,
+                ]);
             }
 
-            $data = $response->json()[0];
-            Log::info('Coordinates retrieved', ['data' => $data]);
+            $data = $response->json();
+            if (empty($data)) {
+                throw new WeatherException('No coordinates found for the given city', 404, null, ['city' => $city]);
+            }
+
             return [
-                'name' => $data['name'],
-                'lat' => $data['lat'],
-                'lon' => $data['lon'],
-                'country' => $data['country'],
-                'state' => $data['state'] ?? null,
+                'name' => $data[0]['name'],
+                'lat' => $data[0]['lat'],
+                'lon' => $data[0]['lon'],
+                'country' => $data[0]['country'],
+                'state' => $data[0]['state'] ?? null,
             ];
-        });
+        } catch (WeatherException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            throw new WeatherException('An unexpected error occurred in getCoordinates', 500, $e, ['city' => $city]);
+        }
     }
 
     protected function getForecast(float $lat, float $lon, string $units): array
     {
-        Log::info('Getting forecast', ['lat' => $lat, 'lon' => $lon, 'units' => $units]);
-        return Cache::remember("forecast_{$lat}_{$lon}_{$units}", 1800, function () use ($lat, $lon, $units) {
+        try {
             $response = Http::get("{$this->baseUrl}forecast", [
                 'lat' => $lat,
                 'lon' => $lon,
@@ -83,15 +88,25 @@ class WeatherService
                 'appid' => $this->apiKey,
             ]);
 
-            Log::info('Forecast API response', ['status' => $response->status(), 'body' => $response->body()]);
-
             if ($response->failed()) {
-                Log::error('Failed to fetch forecast data', ['response' => $response->body()]);
-                throw new WeatherException('Failed to fetch forecast data');
+                throw new WeatherException('Forecast API request failed', $response->status(), null, [
+                    'response' => $response->json(),
+                    'lat' => $lat,
+                    'lon' => $lon,
+                    'units' => $units,
+                ]);
             }
 
             return $response->json();
-        });
+        } catch (WeatherException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            throw new WeatherException('An unexpected error occurred in getForecast', 500, $e, [
+                'lat' => $lat,
+                'lon' => $lon,
+                'units' => $units,
+            ]);
+        }
     }
 
     protected function getCurrentWeather(array $weatherData): array

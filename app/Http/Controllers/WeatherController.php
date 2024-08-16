@@ -19,26 +19,34 @@ class WeatherController extends Controller
 
     public function getWeatherData(Request $request): JsonResponse
     {
-        Log::info('getWeatherData called', $request->all());
-
-        $request->validate([
-            'city' => 'required|string|max:255',
-            'units' => 'string|in:metric,imperial',
-        ]);
-
         try {
+            $request->validate([
+                'city' => 'required|string|max:255',
+                'units' => 'string|in:metric,imperial',
+            ]);
+
             $city = $request->input('city');
             $units = $request->input('units', 'metric');
-            Log::info('Calling WeatherService::getWeatherData', ['city' => $city, 'units' => $units]);
             $data = $this->weatherService->getWeatherData($city, $units);
-            Log::info('WeatherService::getWeatherData response', ['data' => $data]);
             return response()->json($data);
         } catch (WeatherException $e) {
-            Log::error('WeatherException caught', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json([
+                'error' => 'Weather Service Error',
+                'message' => $e->getMessage(),
+                'details' => $e->getDetails() // Assuming we add a getDetails method to WeatherException
+            ], 400);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation Error',
+                'message' => $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            Log::error('Unexpected exception caught', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            return response()->json(['error' => 'An unexpected error occurred'], 500);
+            return response()->json([
+                'error' => 'Unexpected Error',
+                'message' => 'An unexpected error occurred',
+                'details' => $e->getMessage() // Only in development! Remove or obfuscate in production.
+            ], 500);
         }
     }
 
