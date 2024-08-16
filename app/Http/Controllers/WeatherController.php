@@ -27,11 +27,11 @@ class WeatherController extends Controller
             $city = $request->input('city');
             $units = $request->input('units', 'metric');
             $data = $this->weatherService->getWeatherData($city, $units);
-            return response()->cors($data, 200);
+            return response()->json($data);
         } catch (WeatherException $e) {
-            return response()->cors(['error' => $e->getMessage()], 400);
+            return response()->json(['error' => $e->getMessage()], 400);
         } catch (\Exception $e) {
-            return response()->cors(['error' => 'An unexpected error occurred'], 500);
+            return response()->json(['error' => 'An unexpected error occurred'], 500);
         }
     }
 
@@ -46,11 +46,11 @@ class WeatherController extends Controller
             $city = $request->input('city');
             $units = $request->input('units', 'metric');
             $data = $this->weatherService->getWeatherData($city, $units);
-            return response()->cors($data['current'], 200);
+            return response()->json($data['current']);
         } catch (WeatherException $e) {
-            return response()->cors(['error' => $e->getMessage()], 400);
+            return response()->json(['error' => $e->getMessage()], 400);
         } catch (\Exception $e) {
-            return response()->cors(['error' => 'An unexpected error occurred'], 500);
+            return response()->json(['error' => 'An unexpected error occurred'], 500);
         }
     }
 
@@ -65,11 +65,11 @@ class WeatherController extends Controller
             $city = $request->input('city');
             $units = $request->input('units', 'metric');
             $data = $this->weatherService->getWeatherData($city, $units);
-            return response()->cors($data['forecast'], 200);
+            return response()->json($data['forecast']);
         } catch (WeatherException $e) {
-            return response()->cors(['error' => $e->getMessage()], 400);
+            return response()->json(['error' => $e->getMessage()], 400);
         } catch (\Exception $e) {
-            return response()->cors(['error' => 'An unexpected error occurred'], 500);
+            return response()->json(['error' => 'An unexpected error occurred'], 500);
         }
     }
 }
