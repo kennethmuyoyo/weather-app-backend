@@ -35,6 +35,12 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 # Configure Nginx
 COPY nginx.conf /etc/nginx/sites-available/default
 
+# Create startup script
+RUN echo '#!/bin/bash\n\
+sed -i "s/\$PORT/$PORT/g" /etc/nginx/sites-available/default\n\
+php-fpm -D\n\
+nginx -g "daemon off;"' > /start.sh && chmod +x /start.sh
+
 # Expose port 80 and start Nginx & PHP-FPM
 EXPOSE 80
-CMD service nginx start && php-fpm
+CMD ["/start.sh"]
