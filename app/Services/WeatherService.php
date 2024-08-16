@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class WeatherService
 {
-    protected $apiKey;
+    protected $apiKey = "d70250a48a297c0bc8d48b6789c5b709";
     protected $baseUrl = 'https://api.openweathermap.org/data/2.5/';
     protected $geoUrl = 'https://api.openweathermap.org/geo/1.0/';
 
