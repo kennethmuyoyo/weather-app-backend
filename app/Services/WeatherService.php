@@ -13,11 +13,7 @@ class WeatherService
     protected $baseUrl = 'https://api.openweathermap.org/data/2.5/';
     protected $geoUrl = 'https://api.openweathermap.org/geo/1.0/';
 
-    public function __construct()
-    {
-        $this->apiKey = config('services.openweathermap.key');
-    }
-
+    
     public function getWeatherData(string $city, string $units = 'metric'): array
     {
         try {
