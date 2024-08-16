@@ -3,7 +3,7 @@
    return [
        'paths' => ['api/*'],
        'allowed_methods' => ['*'],
-       'allowed_origins' => ['*'],  // In production, replace with your frontend URL
+       'allowed_origins' => array_filter(explode(',', env('ALLOWED_ORIGINS', ''))),
        'allowed_origins_patterns' => [],
        'allowed_headers' => ['*'],
        'exposed_headers' => [],

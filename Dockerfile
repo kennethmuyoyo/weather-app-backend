@@ -32,6 +32,15 @@ COPY --chown=www-data:www-data . /var/www
 # Install dependencies
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
+# Set up Laravel
+RUN php artisan storage:link
+RUN php artisan config:cache
+RUN php artisan route:cache
+RUN php artisan view:cache
+
+# Configure Nginx
+COPY nginx.conf /etc/nginx/sites-available/default
+
 # Configure Nginx
 COPY nginx.conf /etc/nginx/sites-available/default
 
