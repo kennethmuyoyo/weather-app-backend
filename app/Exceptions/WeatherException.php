@@ -21,7 +21,7 @@ class WeatherException extends Exception
             'error' => $this->getMessage(),
             'details' => $this->details,
             'code' => $this->getCode() ?: 500,
-            'trace' => $this->getTraceAsString() // Only include this in development!
+            'trace' => $this->getTraceAsString() 
         ], $this->getCode() ?: 500);
     }
 

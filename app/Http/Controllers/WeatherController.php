@@ -33,7 +33,7 @@ class WeatherController extends Controller
             return response()->json([
                 'error' => 'Weather Service Error',
                 'message' => $e->getMessage(),
-                'details' => $e->getDetails() // Assuming we add a getDetails method to WeatherException
+                'details' => $e->getDetails() 
             ], 400);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -45,7 +45,7 @@ class WeatherController extends Controller
             return response()->json([
                 'error' => 'Unexpected Error',
                 'message' => 'An unexpected error occurred',
-                'details' => $e->getMessage() // Only in development! Remove or obfuscate in production.
+                'details' => $e->getMessage() 
             ], 500);
         }
     }
