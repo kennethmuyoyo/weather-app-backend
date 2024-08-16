@@ -6,6 +6,7 @@ use App\Services\WeatherService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Exceptions\WeatherException;
+use Illuminate\Support\Facades\Log;
 
 class WeatherController extends Controller
 {
@@ -18,6 +19,8 @@ class WeatherController extends Controller
 
     public function getWeatherData(Request $request): JsonResponse
     {
+        Log::info('getWeatherData called', $request->all());
+
         $request->validate([
             'city' => 'required|string|max:255',
             'units' => 'string|in:metric,imperial',
@@ -26,11 +29,15 @@ class WeatherController extends Controller
         try {
             $city = $request->input('city');
             $units = $request->input('units', 'metric');
+            Log::info('Calling WeatherService::getWeatherData', ['city' => $city, 'units' => $units]);
             $data = $this->weatherService->getWeatherData($city, $units);
+            Log::info('WeatherService::getWeatherData response', ['data' => $data]);
             return response()->json($data);
         } catch (WeatherException $e) {
+            Log::error('WeatherException caught', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json(['error' => $e->getMessage()], 400);
         } catch (\Exception $e) {
+            Log::error('Unexpected exception caught', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json(['error' => 'An unexpected error occurred'], 500);
         }
     }
